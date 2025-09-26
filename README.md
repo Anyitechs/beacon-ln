@@ -4,16 +4,7 @@
 
 ---
 
-<svg width="400" height="100" xmlns="http://www.w3.org/2000/svg">
-    <style>
-        .title { font: bold 60px sans-serif; fill: #333; }
-        .ln { font: bold 60px sans-serif; fill: #F7931A; } /* Bitcoin Orange */
-        .beam { fill: #F7931A; opacity: 0.2; }
-    </style>
-    <polygon class="beam" points="5,5 45,50 5,95" />
-    <text x="60" y="75" class="title">Beacon</text>
-    <text x="310" y="75" class="ln">LN</text>
-</svg>
+![Beacon LN Logo](assets/logo.svg)
 
 An open-source desktop Lightning Node focused on simplicity and user experience, powered by LDK and Rust.
 

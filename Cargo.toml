@@ -1,0 +1,7 @@
+# beacon-ln/Cargo.toml
+[workspace]
+members = [
+    "beacon-node",
+    "beacon-ui",
+]
+resolver = "2"

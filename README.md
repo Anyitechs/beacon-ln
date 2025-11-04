@@ -1,18 +1,12 @@
-# Beacon LN
-
-**Your guiding light on the Lightning Network.**
-
----
-
 ![Beacon LN Logo](assets/logo.svg)
 
 An open-source desktop Lightning Node focused on simplicity and user experience, powered by LDK and Rust.
 
-## The Vision
+## The Why?
 
 Running a personal Lightning node is a powerful way to achieve self-sovereignty and support the Bitcoin network. However, the process is often intimidating for non-technical users. **Beacon LN** aims to solve this by providing an intuitive, secure, and easy-to-use desktop application for managing your Lightning node.
 
-This project is built with Rust, [Lightning Development Kit (LDK)](https://lightningdevkit.org/), and the [iced](https://github.com/iced-rs/iced) GUI framework.
+This project is built with Rust, [Lightning Development Kit (LDK)](https://lightningdevkit.org/), and the [Iced](https://github.com/iced-rs/iced) GUI framework.
 
 ## Core Goals for v1.0
 

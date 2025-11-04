@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+iced = { version = "0.13.1", features = ["wgpu", "tokio", "svg", "advanced", "debug", "qr_code"] }
 
 
 beacon-node = { path = "../beacon-node" }

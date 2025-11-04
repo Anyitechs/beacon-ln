@@ -14,6 +14,7 @@ fn main() -> iced::Result {
 }
 
 // A placeholder struct for a node
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 struct Node {
     name: String,
@@ -59,6 +60,7 @@ pub enum Message {
 }
 
 impl BeaconLN {
+    #[allow(dead_code)]
     fn new() -> (Self, Task<Message>) {
         (
             BeaconLN {
@@ -122,11 +124,13 @@ impl BeaconLN {
         Task::none()
     }
 
+    #[allow(dead_code)]
     fn subscription(&self) -> Subscription<Message> {
         Subscription::none()
     }
 
-    fn view<'a>(&'a self) -> Element<'a, Message> {
+    fn view(&self) -> Element<'_, Message> {
+        #[allow(dead_code)]
         fn active_node_style(theme: &Theme) -> button::Style {
             button::Style {
                 background: Some(theme.palette().primary.into()),
@@ -136,6 +140,7 @@ impl BeaconLN {
         }
 
         // Style for the currently selected navigation button
+        #[allow(dead_code)]
         fn active_nav_style(theme: &Theme) -> button::Style {
             button::Style {
                 background: Some(theme.palette().success.into()),
@@ -237,7 +242,7 @@ impl BeaconLN {
             header(),
             Rule::horizontal(10),
             row![
-                node_sidebar(&self),
+                node_sidebar(self),
                 Rule::vertical(10),
                 navigation_pane,
                 Rule::vertical(10),
@@ -300,15 +305,16 @@ fn stat_card_with_color<'a>(
                     theme.palette().background,
                 ),
             };
-            let mut style = iced::widget::container::Style::default();
-            style.background = Some(bg.into());
-            style.text_color = Some(text_color);
-            style.border = Border {
-                color: bg,
-                width: 0.0,
-                radius: 12.0.into(),
-            };
-            style
+            iced::widget::container::Style {
+                background: Some(bg.into()),
+                text_color: Some(text_color),
+                border: Border {
+                    color: bg,
+                    width: 0.0,
+                    radius: 12.0.into(),
+                },
+                ..Default::default()
+            }
         })
         .into()
 }
@@ -326,15 +332,18 @@ fn panel_box<'a>(
 
 fn nav_button_style(theme: &Theme, status: button::Status, is_active: bool) -> button::Style {
     if is_active {
-        let mut st = button::Style::default();
-        st.background = Some(theme.extended_palette().success.weak.color.into());
-        st.text_color = theme.palette().success;
-        st.border = Border {
-            color: theme.extended_palette().success.weak.color,
-            width: 0.0,
-            radius: 10.0.into(),
+        let style = button::Style {
+            background: Some(theme.extended_palette().success.weak.color.into()),
+            text_color: theme.palette().success,
+            border: Border {
+                color: theme.extended_palette().success.weak.color,
+                width: 0.0,
+                radius: 10.0.into(),
+            },
+            ..Default::default()
         };
-        return st;
+
+        return style;
     }
     button::secondary(theme, status)
 }

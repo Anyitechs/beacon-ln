@@ -4,7 +4,7 @@ use iced::widget::{
 };
 use iced::{Border, Element, Length, Theme};
 
-pub fn node_sidebar<'a>(beacon_ln: &'a BeaconLN) -> Container<'a, Message> {
+pub fn node_sidebar(beacon_ln: &BeaconLN) -> Container<'_, Message> {
     let header = row![
         text("Lightning Nodes").size(16),
         horizontal_space(),
@@ -38,7 +38,7 @@ pub fn node_sidebar<'a>(beacon_ln: &'a BeaconLN) -> Container<'a, Message> {
         .padding(12)
 }
 
-fn node_list_item<'a>(index: usize, node: &'a Node, active_index: usize) -> Element<'a, Message> {
+fn node_list_item(index: usize, node: &Node, active_index: usize) -> Element<'_, Message> {
     let status_text = if node.is_online {
         "● Online"
     } else {
@@ -74,7 +74,7 @@ fn node_list_item<'a>(index: usize, node: &'a Node, active_index: usize) -> Elem
         .into()
 }
 
-fn badge_text<'a>(label: &'a str) -> Element<'a, Message> {
+fn badge_text(label: &str) -> Element<'_, Message> {
     container(text(label).size(12))
         .padding(8)
         .style(|theme: &Theme| {

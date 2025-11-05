@@ -1,4 +1,4 @@
-use iced::theme;
+use iced::{Font, theme};
 use iced::widget::{Rule, button, column, container, horizontal_space, row, text};
 use iced::{Alignment, Border, Color, Element, Length, Subscription, Task, Theme};
 
@@ -9,8 +9,17 @@ pub mod components;
 
 fn main() -> iced::Result {
     iced::application("Beacon", BeaconLN::update, BeaconLN::view)
+        .font(include_bytes!("../assets/fonts/Inter-Regular.ttf").as_slice())
+        .font(include_bytes!("../assets/fonts/Inter-Bold.ttf").as_slice())
         .theme(|app| app.theme())
-        .run()
+        // .default_font(Font::with_name(FONT_NAME))
+        .default_font(Font {
+            family: iced::font::Family::Name("Inter-Regular.ttf"),
+            weight: iced::font::Weight::Normal,
+            stretch: iced::font::Stretch::Normal,
+            style: iced::font::Style::Normal,
+        })
+        .run_with(BeaconLN::new)
 }
 
 // A placeholder struct for a node
@@ -60,7 +69,6 @@ pub enum Message {
 }
 
 impl BeaconLN {
-    #[allow(dead_code)]
     fn new() -> (Self, Task<Message>) {
         (
             BeaconLN {
@@ -98,9 +106,9 @@ impl BeaconLN {
             String::from("Custome"),
             theme::Palette {
                 background: Color::WHITE,
-                danger: Color::from_rgb8(255, 0, 0),
-                primary: Color::from_rgb8(255, 255, 255),
-                success: Color::from_rgb8(0, 150, 255),
+                danger: Color::from_rgb8(231, 76, 60),
+                primary: Color::from_rgb8(0, 102, 255),
+                success: Color::from_rgb8(46, 204, 113),
                 text: Color::BLACK,
             },
         )
@@ -133,7 +141,7 @@ impl BeaconLN {
         #[allow(dead_code)]
         fn active_node_style(theme: &Theme) -> button::Style {
             button::Style {
-                background: Some(theme.palette().primary.into()),
+                background: Some(theme.palette().danger.into()),
                 text_color: theme.palette().background,
                 ..button::Style::default()
             }
@@ -333,8 +341,8 @@ fn panel_box<'a>(
 fn nav_button_style(theme: &Theme, status: button::Status, is_active: bool) -> button::Style {
     if is_active {
         let style = button::Style {
-            background: Some(theme.extended_palette().success.weak.color.into()),
-            text_color: theme.palette().success,
+            background: Some(theme.extended_palette().primary.weak.color.into()),
+            text_color: Color::from_rgb8(235, 242, 255),
             border: Border {
                 color: theme.extended_palette().success.weak.color,
                 width: 0.0,
@@ -345,5 +353,5 @@ fn nav_button_style(theme: &Theme, status: button::Status, is_active: bool) -> b
 
         return style;
     }
-    button::secondary(theme, status)
+    button::text(theme, status)
 }

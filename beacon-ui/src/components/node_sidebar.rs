@@ -62,8 +62,7 @@ fn node_list_item(index: usize, node: &Node, active_index: usize) -> Element<'_,
         .padding(10)
         .style(move |theme: &Theme, _status| {
             let mut st = button::Style {
-                background: Some(iced::Background::Color(Color::from_rgb8(242, 242, 242)
-)),
+                background: Some(iced::Background::Color(Color::from_rgb8(242, 242, 242))),
                 text_color: Color::BLACK,
                 border: Border::rounded(Border::default(), Radius::new(10.0)),
                 ..Default::default()

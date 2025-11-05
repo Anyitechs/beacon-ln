@@ -1,6 +1,6 @@
-use iced::{Font, theme};
 use iced::widget::{Rule, button, column, container, horizontal_space, row, text};
 use iced::{Alignment, Border, Color, Element, Length, Subscription, Task, Theme};
+use iced::{Font, theme};
 
 use crate::components::header::*;
 use crate::components::node_sidebar::*;

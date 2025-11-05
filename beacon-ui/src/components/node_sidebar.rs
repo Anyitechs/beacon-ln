@@ -1,8 +1,9 @@
 use crate::{BeaconLN, Message, Node};
+use iced::border::Radius;
 use iced::widget::{
     Container, Rule, button, column, container, horizontal_space, row, text, text_input,
 };
-use iced::{Border, Element, Length, Theme};
+use iced::{Border, Color, Element, Length, Theme};
 
 pub fn node_sidebar(beacon_ln: &BeaconLN) -> Container<'_, Message> {
     let header = row![
@@ -59,8 +60,14 @@ fn node_list_item(index: usize, node: &Node, active_index: usize) -> Element<'_,
         .on_press(Message::NodeSelected(index))
         .width(Length::Fill)
         .padding(10)
-        .style(move |theme: &Theme, status| {
-            let mut st = button::text(theme, status);
+        .style(move |theme: &Theme, _status| {
+            let mut st = button::Style {
+                background: Some(iced::Background::Color(Color::from_rgb8(242, 242, 242)
+)),
+                text_color: Color::BLACK,
+                border: Border::rounded(Border::default(), Radius::new(10.0)),
+                ..Default::default()
+            };
             st.border = Border {
                 color: theme.extended_palette().success.weak.color,
                 width: 0.0,
@@ -68,6 +75,7 @@ fn node_list_item(index: usize, node: &Node, active_index: usize) -> Element<'_,
             };
             if index == active_index {
                 st.background = Some(theme.extended_palette().primary.weak.color.into());
+                st.text_color = Color::WHITE;
             }
             st
         })

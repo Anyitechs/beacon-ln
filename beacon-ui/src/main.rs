@@ -1,6 +1,6 @@
 use iced::widget::{Rule, button, column, container, horizontal_space, row, text};
-use iced::{Alignment, Border, Color, Element, Length, Subscription, Task, Theme};
-use iced::{Font, theme};
+use iced::{Alignment, Border, Color, Element, Font, Length, Subscription, Task, Theme, theme};
+use iced_font_awesome::fa_icon_solid;
 
 use crate::components::header::*;
 use crate::components::node_sidebar::*;
@@ -137,30 +137,22 @@ impl BeaconLN {
         Subscription::none()
     }
 
-    fn view(&self) -> Element<'_, Message> {
-        #[allow(dead_code)]
-        fn active_node_style(theme: &Theme) -> button::Style {
-            button::Style {
-                background: Some(theme.palette().danger.into()),
-                text_color: theme.palette().background,
-                ..button::Style::default()
-            }
-        }
-
-        // Style for the currently selected navigation button
-        #[allow(dead_code)]
-        fn active_nav_style(theme: &Theme) -> button::Style {
-            button::Style {
-                background: Some(theme.palette().success.into()),
-                text_color: theme.palette().background,
-                ..button::Style::default()
-            }
-        }
-
+    fn view<'a>(&'a self) -> Element<'a, Message> {
         let navigation_pane = {
-            let nav_button = |label: &str, view: View, active_view: &View| {
+            let nav_button = |icon_name: &str, label: &'a str, view: View, active_view: &View| {
                 let is_active = &view == active_view;
-                button(text(label.to_string()))
+
+                let mut icon = fa_icon_solid(icon_name).size(20.0);
+
+                if !is_active {
+                    icon = icon.color(Color::BLACK);
+                }
+
+                let content = row![icon, text(label).size(16.0)]
+                    .spacing(10)
+                    .align_y(Alignment::Center);
+
+                button(content)
                     .on_press(Message::ViewSelected(view))
                     .width(Length::Fill)
                     .padding(15)
@@ -178,15 +170,35 @@ impl BeaconLN {
                 column![
                     text(active_node_name).size(24),
                     Rule::horizontal(10),
-                    nav_button("Dashboard", View::Dashboard, &self.active_view),
-                    nav_button("Channels", View::Channels, &self.active_view),
-                    nav_button("Send", View::Send, &self.active_view),
-                    nav_button("Receive", View::Receive, &self.active_view),
-                    nav_button("Transactions", View::Transactions, &self.active_view),
-                    nav_button("Routing", View::Routing, &self.active_view),
-                    nav_button("Security", View::Security, &self.active_view),
-                    nav_button("Analytics", View::Analytics, &self.active_view),
-                    nav_button("Settings", View::Settings, &self.active_view),
+                    nav_button("grip", "Dashboard", View::Dashboard, &self.active_view),
+                    nav_button(
+                        "diagram-project",
+                        "Channels",
+                        View::Channels,
+                        &self.active_view
+                    ),
+                    nav_button("paper-plane", "Send", View::Send, &self.active_view),
+                    nav_button("download", "Receive", View::Receive, &self.active_view),
+                    nav_button(
+                        "list",
+                        "Transactions",
+                        View::Transactions,
+                        &self.active_view
+                    ),
+                    nav_button("route", "Routing", View::Routing, &self.active_view),
+                    nav_button(
+                        "shield-halved",
+                        "Security",
+                        View::Security,
+                        &self.active_view
+                    ),
+                    nav_button(
+                        "chart-line",
+                        "Analytics",
+                        View::Analytics,
+                        &self.active_view
+                    ),
+                    nav_button("gear", "Settings", View::Settings, &self.active_view),
                 ]
                 .spacing(10),
             )
@@ -338,11 +350,11 @@ fn panel_box<'a>(
         .into()
 }
 
-fn nav_button_style(theme: &Theme, status: button::Status, is_active: bool) -> button::Style {
+fn nav_button_style(theme: &Theme, _status: button::Status, is_active: bool) -> button::Style {
     if is_active {
         let style = button::Style {
             background: Some(theme.extended_palette().primary.weak.color.into()),
-            text_color: Color::from_rgb8(235, 242, 255),
+            text_color: theme.extended_palette().primary.base.text,
             border: Border {
                 color: theme.extended_palette().success.weak.color,
                 width: 0.0,
@@ -353,5 +365,10 @@ fn nav_button_style(theme: &Theme, status: button::Status, is_active: bool) -> b
 
         return style;
     }
-    button::text(theme, status)
+    button::Style {
+        background: Some(iced::Background::Color(Color::TRANSPARENT)),
+        text_color: Color::BLACK,
+        border: Border::rounded(Border::default(), iced::border::Radius::new(10.0)),
+        ..Default::default()
+    }
 }

@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 iced = { version = "0.13.1", features = ["wgpu", "tokio", "svg", "advanced", "debug", "qr_code"] }
+iced_font_awesome = "0.2.0"
 
 
 beacon-node = { path = "../beacon-node" }

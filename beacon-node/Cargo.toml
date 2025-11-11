@@ -5,3 +5,6 @@ edition = "2024"
 
 [dependencies]
 ldk-node = "0.6.2"
+
+# for testing the node clustering feature
+tempfile = "3.23.0"

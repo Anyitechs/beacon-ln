@@ -2,7 +2,7 @@ use ldk_node::bitcoin::Network;
 use ldk_node::bitcoin::secp256k1::PublicKey;
 use ldk_node::lightning::ln::msgs::SocketAddress;
 use ldk_node::lightning::util::ser::Hostname;
-use ldk_node::{Builder, Node, NodeStatus};
+use ldk_node::{Builder, Node, NodeError, NodeStatus, UserChannelId};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -72,6 +72,49 @@ impl BeaconNode {
     // Returns the Public key ID of the Node
     pub fn get_node_id(&self) -> PublicKey {
         self.node.node_id()
+    }
+
+    // Gets the funding address for the node.
+    pub fn get_node_funding_address(&self) -> String {
+        self.node
+            .onchain_payment()
+            .new_address()
+            .unwrap()
+            .to_string()
+    }
+
+    // Connects to a node and open a new unannounced channel.
+    pub fn open_unannounced_channel(
+        &self,
+        node_id: PublicKey,
+        address: SocketAddress,
+        channel_amount_sats: u64,
+        push_to_counterparty_msat: Option<u64>,
+    ) -> Result<UserChannelId, NodeError> {
+        self.node.open_channel(
+            node_id,
+            address,
+            channel_amount_sats,
+            push_to_counterparty_msat,
+            None,
+        )
+    }
+
+    // Connects to a node and opens a new announced channel.
+    pub fn open_announced_channel(
+        &self,
+        node_id: PublicKey,
+        address: SocketAddress,
+        channel_amount_sats: u64,
+        push_to_counterparty_msat: Option<u64>,
+    ) -> Result<UserChannelId, NodeError> {
+        self.node.open_announced_channel(
+            node_id,
+            address,
+            channel_amount_sats,
+            push_to_counterparty_msat,
+            None,
+        )
     }
 }
 

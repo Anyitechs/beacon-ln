@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 iced = { version = "0.13.1", features = ["wgpu", "tokio", "svg", "advanced", "debug", "qr_code"] }
 iced_font_awesome = "0.2.0"
-
+tokio-stream = { version = "0.1.17", features = ["sync"] }
+env_logger = "0.11.8"
 
 beacon-node = { path = "../beacon-node" }

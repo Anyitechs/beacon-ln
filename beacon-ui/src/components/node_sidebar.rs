@@ -1,15 +1,19 @@
-use crate::{BeaconLN, Message, Node};
+use crate::{BeaconLN, Message};
+use beacon_node::NodeDetails;
 use iced::border::Radius;
 use iced::widget::{
-    Container, Rule, button, column, container, horizontal_space, row, text, text_input,
+    Column, Rule, button, column, container, horizontal_space, row, text, text_input,
 };
-use iced::{Border, Color, Element, Length, Theme};
+use iced::{Alignment, Border, Color, Element, Length, Theme, padding};
+use iced_font_awesome::fa_icon_solid;
 
-pub fn node_sidebar(beacon_ln: &BeaconLN) -> Container<'_, Message> {
+pub fn node_sidebar(beacon_ln: &BeaconLN) -> Column<'_, Message> {
+    let active_nodes: String = beacon_ln.nodes.len().to_string();
+
     let header = row![
         text("Lightning Nodes").size(16),
         horizontal_space(),
-        badge_text("3 Active"),
+        badge_text(active_nodes),
     ];
 
     let search = text_input("Search nodes...", beacon_ln.search_query.as_str())
@@ -17,7 +21,7 @@ pub fn node_sidebar(beacon_ln: &BeaconLN) -> Container<'_, Message> {
         .padding(8)
         .size(14);
 
-    let filtered_nodes: Vec<(usize, &Node)> = beacon_ln
+    let filtered_nodes: Vec<(usize, &NodeDetails)> = beacon_ln
         .nodes
         .iter()
         .enumerate()
@@ -33,13 +37,30 @@ pub fn node_sidebar(beacon_ln: &BeaconLN) -> Container<'_, Message> {
         |col, (i, node)| col.push(node_list_item(i, node, beacon_ln.active_node_index)),
     );
 
-    container(nodes_list)
+    let button_content = row![fa_icon_solid("plus"), text("Add New Node").size(16.0)]
+        .spacing(10)
+        .align_y(Alignment::Center);
+
+    let create_node = container(
+        button(button_content)
+            .on_press(Message::CreateNodePressed)
+            .width(Length::Fixed(280.0))
+            .padding(12)
+            .style(move |theme: &Theme, _status| node_button_style(theme, _status)),
+    )
+    .padding(padding::bottom(20))
+    .align_x(Alignment::Center)
+    .padding(10);
+
+    let side_node_container = container(column![nodes_list])
         .width(Length::Fixed(280.0))
         .height(Length::Fill)
-        .padding(12)
+        .padding(12);
+
+    column![side_node_container, create_node].spacing(8)
 }
 
-fn node_list_item(index: usize, node: &Node, active_index: usize) -> Element<'_, Message> {
+fn node_list_item(index: usize, node: &NodeDetails, active_index: usize) -> Element<'_, Message> {
     let status_text = if node.is_online {
         "● Online"
     } else {
@@ -81,8 +102,8 @@ fn node_list_item(index: usize, node: &Node, active_index: usize) -> Element<'_,
         .into()
 }
 
-fn badge_text(label: &str) -> Element<'_, Message> {
-    container(text(label).size(12))
+fn badge_text(label: String) -> Element<'static, Message> {
+    container(text(format!("{} Active", label)).size(12))
         .padding(8)
         .style(|theme: &Theme| {
             let mut style = iced::widget::container::Style::default();
@@ -97,4 +118,19 @@ fn badge_text(label: &str) -> Element<'_, Message> {
             style
         })
         .into()
+}
+
+fn node_button_style(theme: &Theme, _status: button::Status) -> button::Style {
+    let style = button::Style {
+        background: Some(theme.extended_palette().primary.weak.color.into()),
+        text_color: theme.extended_palette().primary.base.text,
+        border: Border {
+            color: theme.extended_palette().success.weak.color,
+            width: 0.0,
+            radius: 10.0.into(),
+        },
+        ..Default::default()
+    };
+
+    style
 }

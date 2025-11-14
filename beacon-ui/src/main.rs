@@ -1,13 +1,23 @@
+use iced::futures::stream::StreamExt;
 use iced::widget::{Rule, button, column, container, horizontal_space, row, text};
 use iced::{Alignment, Border, Color, Element, Font, Length, Subscription, Task, Theme, theme};
 use iced_font_awesome::fa_icon_solid;
+use tokio_stream::wrappers::BroadcastStream;
 
 use crate::components::header::*;
 use crate::components::node_sidebar::*;
+use beacon_node::types::{Network, log};
+use beacon_node::{
+    BeaconNodeConfig, BeaconNodeManagerCommand, BeaconNodeManagerEvent, BeaconNodeManagerHandle,
+    NodeDetails,
+};
+use std::path::PathBuf;
 
 pub mod components;
 
 fn main() -> iced::Result {
+    env_logger::init();
+
     iced::application("Beacon", BeaconLN::update, BeaconLN::view)
         .font(include_bytes!("../assets/fonts/Inter-Regular.ttf").as_slice())
         .font(include_bytes!("../assets/fonts/Inter-Bold.ttf").as_slice())
@@ -19,17 +29,8 @@ fn main() -> iced::Result {
             stretch: iced::font::Stretch::Normal,
             style: iced::font::Style::Normal,
         })
+        .subscription(BeaconLN::subscription)
         .run_with(BeaconLN::new)
-}
-
-// A placeholder struct for a node
-#[allow(dead_code)]
-#[derive(Debug, Clone)]
-struct Node {
-    name: String,
-    is_online: bool,
-    channels_active: u32,
-    uptime_hours: u32,
 }
 
 // Defines which view is active in the main content area
@@ -54,7 +55,8 @@ impl Default for View {
 
 #[derive(Default)]
 pub struct BeaconLN {
-    nodes: Vec<Node>,
+    manager_handle: Option<BeaconNodeManagerHandle>,
+    nodes: Vec<NodeDetails>,
     active_node_index: usize,
     active_view: View,
     search_query: String,
@@ -66,33 +68,17 @@ pub enum Message {
     NodeSelected(usize),
     ViewSelected(View),
     SearchChanged(String),
+    CreateNodePressed,
+    ManagerEvent(BeaconNodeManagerEvent),
+    NoOp,
 }
 
 impl BeaconLN {
     fn new() -> (Self, Task<Message>) {
         (
             BeaconLN {
-                // Placeholder data
-                nodes: vec![
-                    Node {
-                        name: "My Main Node".into(),
-                        is_online: true,
-                        channels_active: 12,
-                        uptime_hours: 24,
-                    },
-                    Node {
-                        name: "Testnet Node".into(),
-                        is_online: false,
-                        channels_active: 3,
-                        uptime_hours: 6,
-                    },
-                    Node {
-                        name: "Development Node".into(),
-                        is_online: false,
-                        channels_active: 0,
-                        uptime_hours: 0,
-                    },
-                ],
+                manager_handle: None,
+                nodes: Vec::new(),
                 active_node_index: 0,
                 active_view: View::Dashboard,
                 search_query: String::new(),
@@ -117,7 +103,20 @@ impl BeaconLN {
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::IcedReady => {
-                // Here we would spawn the beacon-node background task
+                log::info!("Iced is ready!");
+                let base_dir = PathBuf::from("./../beacon-node/beacon-data");
+                self.manager_handle = Some(beacon_node::start_manager_actor(base_dir));
+
+                if let Some(handle) = &self.manager_handle {
+                    let sender = handle.command_sender.clone();
+
+                    return Task::perform(
+                        async move {
+                            sender.send(BeaconNodeManagerCommand::ListNodes).await.ok();
+                        },
+                        |_| Message::NoOp,
+                    );
+                }
             }
             Message::NodeSelected(index) => {
                 self.active_node_index = index;
@@ -128,12 +127,77 @@ impl BeaconLN {
             Message::SearchChanged(value) => {
                 self.search_query = value;
             }
+            Message::CreateNodePressed => {
+                if let Some(handle) = &self.manager_handle {
+                    log::info!("UI sending command to create node...");
+
+                    let node_name = format!("Node {}", self.nodes.len() + 1);
+                    let config = BeaconNodeConfig {
+                        network: Network::Testnet,
+                        chain_source: None,
+                        gossip_source: None,
+                        node_alias: Some(node_name.clone()),
+                    };
+
+                    let sender = handle.command_sender.clone();
+
+                    return Task::perform(
+                        async move {
+                            sender
+                                .send(BeaconNodeManagerCommand::CreateNode { node_name, config })
+                                .await
+                        },
+                        |res| {
+                            if res.is_err() {
+                                Message::ManagerEvent(BeaconNodeManagerEvent::Error(
+                                    "Failed to send command".into(),
+                                ))
+                            } else {
+                                Message::NoOp
+                            }
+                        },
+                    );
+                }
+            }
+            Message::ManagerEvent(event) => {
+                match event {
+                    BeaconNodeManagerEvent::NodeListUpdated(nodes) => {
+                        self.nodes = nodes;
+                    }
+                    BeaconNodeManagerEvent::NodeCreated(name) => {
+                        log::info!("UI notified that node was created: {}", name);
+                        // TODO: display a success toast here
+                    }
+                    BeaconNodeManagerEvent::Error(e) => {
+                        log::error!("Manager error: {}", e);
+                        // TODO: display an error toast here
+                    }
+                }
+            }
+            Message::NoOp => {}
         }
         Task::none()
     }
 
-    #[allow(dead_code)]
     fn subscription(&self) -> Subscription<Message> {
+        if let Some(handle) = &self.manager_handle {
+            struct ManagerEvents;
+
+            // Creates a stream from the broadcast receiver.
+            //  Calling `resubscribe` is important to get a fresh receiver for this subscription.
+            let event_stream =
+                BroadcastStream::new(handle.event_receiver.resubscribe()).map(|result| {
+                    result
+                        .map(Message::ManagerEvent)
+                        .unwrap_or(Message::IcedReady)
+                });
+
+            return Subscription::run_with_id(
+                std::any::TypeId::of::<ManagerEvents>(),
+                event_stream,
+            );
+        }
+
         Subscription::none()
     }
 
@@ -164,7 +228,7 @@ impl BeaconLN {
             let active_node_name: String = self
                 .nodes
                 .get(self.active_node_index)
-                .map_or(String::new(), |n| n.name.clone());
+                .map_or(String::new(), |n| n.name.to_string());
 
             container(
                 column![
